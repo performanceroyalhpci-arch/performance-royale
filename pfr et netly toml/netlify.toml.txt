@@ -1,6 +1,9 @@
 [build]
   publish = "."
 
+[functions]
+  directory = "netlify/functions"
+
 # Redirection automatique HTTP -> HTTPS (comportement par défaut de
 # Netlify sur les domaines *.netlify.app et les domaines custom avec
 # certificat géré ; cette règle le rend explicite).
