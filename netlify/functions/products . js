@@ -1,0 +1,126 @@
+// netlify/functions/products.js
+//
+// Gère les produits dans Firestore via REST API
+// GET /api/products → lire tous les produits
+// POST /api/products → ajouter un produit
+// PUT /api/products/:id → modifier un produit
+// DELETE /api/products/:id → supprimer un produit
+
+const FIRESTORE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID;
+const FIRESTORE_API_KEY = process.env.FIREBASE_API_KEY;
+const FIRESTORE_BASE_URL = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents`;
+
+// Récupérer tous les produits
+async function getProducts() {
+  try {
+    const response = await fetch(
+      `${FIRESTORE_BASE_URL}/products?key=${FIRESTORE_API_KEY}`,
+      { method: 'GET' }
+    );
+    
+    if (!response.ok) {
+      return [];
+    }
+
+    const data = await response.json();
+    const products = [];
+
+    if (data.documents) {
+      data.documents.forEach(doc => {
+        const fields = doc.fields || {};
+        products.push({
+          id: doc.name.split('/').pop(),
+          name: fields.name?.stringValue || '',
+          slug: fields.slug?.stringValue || '',
+          tagline: fields.tagline?.stringValue || '',
+          price: parseInt(fields.price?.integerValue || 0),
+          oldPrice: fields.oldPrice?.integerValue ? parseInt(fields.oldPrice.integerValue) : null,
+          description: fields.description?.stringValue || '',
+          usage: fields.usage?.stringValue || '',
+          badge: fields.badge?.stringValue || '',
+          minQty: fields.minQty?.integerValue ? parseInt(fields.minQty.integerValue) : undefined,
+          benefits: fields.benefits?.arrayValue?.values?.map(v => v.stringValue) || [],
+          ingredients: fields.ingredients?.arrayValue?.values?.map(v => v.stringValue) || [],
+          image: fields.image?.stringValue || '',
+          gallery: fields.gallery?.arrayValue?.values?.map(v => v.stringValue) || [],
+          promo: fields.promo?.booleanValue || false
+        });
+      });
+    }
+
+    return products;
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    return [];
+  }
+}
+
+// Ajouter un produit
+async function createProduct(product) {
+  const fields = {
+    name: { stringValue: product.name || '' },
+    slug: { stringValue: product.slug || '' },
+    tagline: { stringValue: product.tagline || '' },
+    price: { integerValue: String(product.price || 0) },
+    description: { stringValue: product.description || '' },
+    usage: { stringValue: product.usage || '' },
+    badge: { stringValue: product.badge || '' },
+    image: { stringValue: product.image || '' },
+    promo: { booleanValue: product.promo || false },
+    benefits: {
+      arrayValue: {
+        values: (product.benefits || []).map(b => ({ stringValue: b }))
+      }
+    },
+    gallery: {
+      arrayValue: {
+        values: (product.gallery || []).map(g => ({ stringValue: g }))
+      }
+    }
+  };
+
+  if (product.oldPrice) {
+    fields.oldPrice = { integerValue: String(product.oldPrice) };
+  }
+  if (product.minQty) {
+    fields.minQty = { integerValue: String(product.minQty) };
+  }
+  if (product.ingredients && product.ingredients.length > 0) {
+    fields.ingredients = {
+      arrayValue: {
+        values: product.ingredients.map(i => ({ stringValue: i }))
+      }
+    };
+  }
+
+  try {
+    const response = await fetch(
+      `${FIRESTORE_BASE_URL}/products?key=${FIRESTORE_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to create product: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return {
+      id: data.name.split('/').pop(),
+      ...product
+    };
+  } catch (error) {
+    console.error('Error creating product:', error);
+    throw error;
+  }
+}
+
+// Modifier un produit
+async function updateProduct(productId, product) {
+  const fields = {
+    name: { stringValue: product.name || '' },
+    slug: { stringValue: product.slug || '' },
+    tagline: { stringValue: product.tagline || '' },
