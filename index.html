@@ -617,6 +617,131 @@ const faq = [
   { q: "Y a-t-il des contre-indications ?", a: "Nos produits sont destinés aux hommes majeurs en bonne santé. En cas de traitement médical, consultez votre médecin avant utilisation." },
 ];
 
+
+// ====== FONCTIONS FIRESTORE API ======
+
+async function loadProductsFromFirestore() {
+  try {
+    const response = await fetch('/api/products');
+    if (response.ok) {
+      products = await response.json();
+      renderProductsPage();
+    }
+  } catch (error) {
+    console.error('Erreur chargement produits:', error);
+  }
+}
+
+async function loadCarouselFromFirestore() {
+  try {
+    const response = await fetch('/api/carousel');
+    if (response.ok) {
+      const images = await response.json();
+      CAROUSEL = images;
+      renderCarousel();
+    }
+  } catch (error) {
+    console.error('Erreur chargement carousel:', error);
+  }
+}
+
+async function loadSiteSettingsFromFirestore() {
+  try {
+    const response = await fetch('/api/site-settings');
+    if (response.ok) {
+      const settings = await response.json();
+      SITE.name = settings.siteName || SITE.name;
+      SITE.tagline = settings.heroSubtitle || SITE.tagline;
+      SITE.whatsapp = settings.whatsappNumber || SITE.whatsapp;
+    }
+  } catch (error) {
+    console.error('Erreur chargement paramètres:', error);
+  }
+}
+
+async function loadOrdersFromFirestore() {
+  try {
+    const response = await fetch('/api/orders');
+    if (response.ok) {
+      ORDERS = await response.json();
+    }
+  } catch (error) {
+    console.error('Erreur chargement commandes:', error);
+  }
+}
+
+async function saveOrderToFirestore(orderData) {
+  try {
+    const response = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(orderData)
+    });
+    if (!response.ok) throw new Error('Erreur sauvegarde commande');
+    
+    // Recharger les commandes
+    await loadOrdersFromFirestore();
+    return true;
+  } catch (error) {
+    console.error('Erreur:', error);
+    return false;
+  }
+}
+
+async function updateOrderStatusInFirestore(orderId, newStatus) {
+  try {
+    // Trouver la commande
+    const order = ORDERS.find(o => o.id === orderId);
+    if (!order) return false;
+
+    const response = await fetch(`/api/orders?orderId=${orderId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({...order, status: newStatus})
+    });
+    
+    if (!response.ok) throw new Error('Erreur mise à jour');
+    
+    // Recharger les commandes
+    await loadOrdersFromFirestore();
+    return true;
+  } catch (error) {
+    console.error('Erreur:', error);
+    return false;
+  }
+}
+
+async function deleteProductFromFirestore(productId) {
+  try {
+    const response = await fetch(`/api/products?productId=${productId}`, {
+      method: 'DELETE'
+    });
+    if (!response.ok) throw new Error('Erreur suppression');
+    
+    // Recharger les produits
+    await loadProductsFromFirestore();
+    return true;
+  } catch (error) {
+    console.error('Erreur:', error);
+    return false;
+  }
+}
+
+// Charger les données au démarrage
+async function initializeFromFirestore() {
+  await loadProductsFromFirestore();
+  await loadCarouselFromFirestore();
+  await loadSiteSettingsFromFirestore();
+  await loadOrdersFromFirestore();
+}
+
+// Lancer l'initialisation quand la page est prête
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeFromFirestore);
+} else {
+  initializeFromFirestore();
+}
+
 </script>
 <script>
 /* ===========================================================
@@ -669,6 +794,131 @@ function logoSvg() {
 
 function logoHtml() {
   return `<div class="logo">${logoSvg()}<div class="logo-text"><span class="l1">Performance</span><span class="l2 text-gradient-gold">Royale</span></div></div>`;
+}
+
+
+// ====== FONCTIONS FIRESTORE API ======
+
+async function loadProductsFromFirestore() {
+  try {
+    const response = await fetch('/api/products');
+    if (response.ok) {
+      products = await response.json();
+      renderProductsPage();
+    }
+  } catch (error) {
+    console.error('Erreur chargement produits:', error);
+  }
+}
+
+async function loadCarouselFromFirestore() {
+  try {
+    const response = await fetch('/api/carousel');
+    if (response.ok) {
+      const images = await response.json();
+      CAROUSEL = images;
+      renderCarousel();
+    }
+  } catch (error) {
+    console.error('Erreur chargement carousel:', error);
+  }
+}
+
+async function loadSiteSettingsFromFirestore() {
+  try {
+    const response = await fetch('/api/site-settings');
+    if (response.ok) {
+      const settings = await response.json();
+      SITE.name = settings.siteName || SITE.name;
+      SITE.tagline = settings.heroSubtitle || SITE.tagline;
+      SITE.whatsapp = settings.whatsappNumber || SITE.whatsapp;
+    }
+  } catch (error) {
+    console.error('Erreur chargement paramètres:', error);
+  }
+}
+
+async function loadOrdersFromFirestore() {
+  try {
+    const response = await fetch('/api/orders');
+    if (response.ok) {
+      ORDERS = await response.json();
+    }
+  } catch (error) {
+    console.error('Erreur chargement commandes:', error);
+  }
+}
+
+async function saveOrderToFirestore(orderData) {
+  try {
+    const response = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(orderData)
+    });
+    if (!response.ok) throw new Error('Erreur sauvegarde commande');
+    
+    // Recharger les commandes
+    await loadOrdersFromFirestore();
+    return true;
+  } catch (error) {
+    console.error('Erreur:', error);
+    return false;
+  }
+}
+
+async function updateOrderStatusInFirestore(orderId, newStatus) {
+  try {
+    // Trouver la commande
+    const order = ORDERS.find(o => o.id === orderId);
+    if (!order) return false;
+
+    const response = await fetch(`/api/orders?orderId=${orderId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({...order, status: newStatus})
+    });
+    
+    if (!response.ok) throw new Error('Erreur mise à jour');
+    
+    // Recharger les commandes
+    await loadOrdersFromFirestore();
+    return true;
+  } catch (error) {
+    console.error('Erreur:', error);
+    return false;
+  }
+}
+
+async function deleteProductFromFirestore(productId) {
+  try {
+    const response = await fetch(`/api/products?productId=${productId}`, {
+      method: 'DELETE'
+    });
+    if (!response.ok) throw new Error('Erreur suppression');
+    
+    // Recharger les produits
+    await loadProductsFromFirestore();
+    return true;
+  } catch (error) {
+    console.error('Erreur:', error);
+    return false;
+  }
+}
+
+// Charger les données au démarrage
+async function initializeFromFirestore() {
+  await loadProductsFromFirestore();
+  await loadCarouselFromFirestore();
+  await loadSiteSettingsFromFirestore();
+  await loadOrdersFromFirestore();
+}
+
+// Lancer l'initialisation quand la page est prête
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeFromFirestore);
+} else {
+  initializeFromFirestore();
 }
 
 </script>
@@ -863,6 +1113,131 @@ function toast(message, type = "success") {
   el.textContent = message;
   host.appendChild(el);
   setTimeout(() => { el.remove(); }, 3200);
+}
+
+
+// ====== FONCTIONS FIRESTORE API ======
+
+async function loadProductsFromFirestore() {
+  try {
+    const response = await fetch('/api/products');
+    if (response.ok) {
+      products = await response.json();
+      renderProductsPage();
+    }
+  } catch (error) {
+    console.error('Erreur chargement produits:', error);
+  }
+}
+
+async function loadCarouselFromFirestore() {
+  try {
+    const response = await fetch('/api/carousel');
+    if (response.ok) {
+      const images = await response.json();
+      CAROUSEL = images;
+      renderCarousel();
+    }
+  } catch (error) {
+    console.error('Erreur chargement carousel:', error);
+  }
+}
+
+async function loadSiteSettingsFromFirestore() {
+  try {
+    const response = await fetch('/api/site-settings');
+    if (response.ok) {
+      const settings = await response.json();
+      SITE.name = settings.siteName || SITE.name;
+      SITE.tagline = settings.heroSubtitle || SITE.tagline;
+      SITE.whatsapp = settings.whatsappNumber || SITE.whatsapp;
+    }
+  } catch (error) {
+    console.error('Erreur chargement paramètres:', error);
+  }
+}
+
+async function loadOrdersFromFirestore() {
+  try {
+    const response = await fetch('/api/orders');
+    if (response.ok) {
+      ORDERS = await response.json();
+    }
+  } catch (error) {
+    console.error('Erreur chargement commandes:', error);
+  }
+}
+
+async function saveOrderToFirestore(orderData) {
+  try {
+    const response = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(orderData)
+    });
+    if (!response.ok) throw new Error('Erreur sauvegarde commande');
+    
+    // Recharger les commandes
+    await loadOrdersFromFirestore();
+    return true;
+  } catch (error) {
+    console.error('Erreur:', error);
+    return false;
+  }
+}
+
+async function updateOrderStatusInFirestore(orderId, newStatus) {
+  try {
+    // Trouver la commande
+    const order = ORDERS.find(o => o.id === orderId);
+    if (!order) return false;
+
+    const response = await fetch(`/api/orders?orderId=${orderId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({...order, status: newStatus})
+    });
+    
+    if (!response.ok) throw new Error('Erreur mise à jour');
+    
+    // Recharger les commandes
+    await loadOrdersFromFirestore();
+    return true;
+  } catch (error) {
+    console.error('Erreur:', error);
+    return false;
+  }
+}
+
+async function deleteProductFromFirestore(productId) {
+  try {
+    const response = await fetch(`/api/products?productId=${productId}`, {
+      method: 'DELETE'
+    });
+    if (!response.ok) throw new Error('Erreur suppression');
+    
+    // Recharger les produits
+    await loadProductsFromFirestore();
+    return true;
+  } catch (error) {
+    console.error('Erreur:', error);
+    return false;
+  }
+}
+
+// Charger les données au démarrage
+async function initializeFromFirestore() {
+  await loadProductsFromFirestore();
+  await loadCarouselFromFirestore();
+  await loadSiteSettingsFromFirestore();
+  await loadOrdersFromFirestore();
+}
+
+// Lancer l'initialisation quand la page est prête
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeFromFirestore);
+} else {
+  initializeFromFirestore();
 }
 
 </script>
@@ -1340,6 +1715,131 @@ function renderHome() {
   </section>`;
 }
 
+
+// ====== FONCTIONS FIRESTORE API ======
+
+async function loadProductsFromFirestore() {
+  try {
+    const response = await fetch('/api/products');
+    if (response.ok) {
+      products = await response.json();
+      renderProductsPage();
+    }
+  } catch (error) {
+    console.error('Erreur chargement produits:', error);
+  }
+}
+
+async function loadCarouselFromFirestore() {
+  try {
+    const response = await fetch('/api/carousel');
+    if (response.ok) {
+      const images = await response.json();
+      CAROUSEL = images;
+      renderCarousel();
+    }
+  } catch (error) {
+    console.error('Erreur chargement carousel:', error);
+  }
+}
+
+async function loadSiteSettingsFromFirestore() {
+  try {
+    const response = await fetch('/api/site-settings');
+    if (response.ok) {
+      const settings = await response.json();
+      SITE.name = settings.siteName || SITE.name;
+      SITE.tagline = settings.heroSubtitle || SITE.tagline;
+      SITE.whatsapp = settings.whatsappNumber || SITE.whatsapp;
+    }
+  } catch (error) {
+    console.error('Erreur chargement paramètres:', error);
+  }
+}
+
+async function loadOrdersFromFirestore() {
+  try {
+    const response = await fetch('/api/orders');
+    if (response.ok) {
+      ORDERS = await response.json();
+    }
+  } catch (error) {
+    console.error('Erreur chargement commandes:', error);
+  }
+}
+
+async function saveOrderToFirestore(orderData) {
+  try {
+    const response = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(orderData)
+    });
+    if (!response.ok) throw new Error('Erreur sauvegarde commande');
+    
+    // Recharger les commandes
+    await loadOrdersFromFirestore();
+    return true;
+  } catch (error) {
+    console.error('Erreur:', error);
+    return false;
+  }
+}
+
+async function updateOrderStatusInFirestore(orderId, newStatus) {
+  try {
+    // Trouver la commande
+    const order = ORDERS.find(o => o.id === orderId);
+    if (!order) return false;
+
+    const response = await fetch(`/api/orders?orderId=${orderId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({...order, status: newStatus})
+    });
+    
+    if (!response.ok) throw new Error('Erreur mise à jour');
+    
+    // Recharger les commandes
+    await loadOrdersFromFirestore();
+    return true;
+  } catch (error) {
+    console.error('Erreur:', error);
+    return false;
+  }
+}
+
+async function deleteProductFromFirestore(productId) {
+  try {
+    const response = await fetch(`/api/products?productId=${productId}`, {
+      method: 'DELETE'
+    });
+    if (!response.ok) throw new Error('Erreur suppression');
+    
+    // Recharger les produits
+    await loadProductsFromFirestore();
+    return true;
+  } catch (error) {
+    console.error('Erreur:', error);
+    return false;
+  }
+}
+
+// Charger les données au démarrage
+async function initializeFromFirestore() {
+  await loadProductsFromFirestore();
+  await loadCarouselFromFirestore();
+  await loadSiteSettingsFromFirestore();
+  await loadOrdersFromFirestore();
+}
+
+// Lancer l'initialisation quand la page est prête
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeFromFirestore);
+} else {
+  initializeFromFirestore();
+}
+
 </script>
 <script>
 /* ===========================================================
@@ -1734,12 +2234,262 @@ function initPanierEvents() {
   });
 }
 
+
+// ====== FONCTIONS FIRESTORE API ======
+
+async function loadProductsFromFirestore() {
+  try {
+    const response = await fetch('/api/products');
+    if (response.ok) {
+      products = await response.json();
+      renderProductsPage();
+    }
+  } catch (error) {
+    console.error('Erreur chargement produits:', error);
+  }
+}
+
+async function loadCarouselFromFirestore() {
+  try {
+    const response = await fetch('/api/carousel');
+    if (response.ok) {
+      const images = await response.json();
+      CAROUSEL = images;
+      renderCarousel();
+    }
+  } catch (error) {
+    console.error('Erreur chargement carousel:', error);
+  }
+}
+
+async function loadSiteSettingsFromFirestore() {
+  try {
+    const response = await fetch('/api/site-settings');
+    if (response.ok) {
+      const settings = await response.json();
+      SITE.name = settings.siteName || SITE.name;
+      SITE.tagline = settings.heroSubtitle || SITE.tagline;
+      SITE.whatsapp = settings.whatsappNumber || SITE.whatsapp;
+    }
+  } catch (error) {
+    console.error('Erreur chargement paramètres:', error);
+  }
+}
+
+async function loadOrdersFromFirestore() {
+  try {
+    const response = await fetch('/api/orders');
+    if (response.ok) {
+      ORDERS = await response.json();
+    }
+  } catch (error) {
+    console.error('Erreur chargement commandes:', error);
+  }
+}
+
+async function saveOrderToFirestore(orderData) {
+  try {
+    const response = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(orderData)
+    });
+    if (!response.ok) throw new Error('Erreur sauvegarde commande');
+    
+    // Recharger les commandes
+    await loadOrdersFromFirestore();
+    return true;
+  } catch (error) {
+    console.error('Erreur:', error);
+    return false;
+  }
+}
+
+async function updateOrderStatusInFirestore(orderId, newStatus) {
+  try {
+    // Trouver la commande
+    const order = ORDERS.find(o => o.id === orderId);
+    if (!order) return false;
+
+    const response = await fetch(`/api/orders?orderId=${orderId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({...order, status: newStatus})
+    });
+    
+    if (!response.ok) throw new Error('Erreur mise à jour');
+    
+    // Recharger les commandes
+    await loadOrdersFromFirestore();
+    return true;
+  } catch (error) {
+    console.error('Erreur:', error);
+    return false;
+  }
+}
+
+async function deleteProductFromFirestore(productId) {
+  try {
+    const response = await fetch(`/api/products?productId=${productId}`, {
+      method: 'DELETE'
+    });
+    if (!response.ok) throw new Error('Erreur suppression');
+    
+    // Recharger les produits
+    await loadProductsFromFirestore();
+    return true;
+  } catch (error) {
+    console.error('Erreur:', error);
+    return false;
+  }
+}
+
+// Charger les données au démarrage
+async function initializeFromFirestore() {
+  await loadProductsFromFirestore();
+  await loadCarouselFromFirestore();
+  await loadSiteSettingsFromFirestore();
+  await loadOrdersFromFirestore();
+}
+
+// Lancer l'initialisation quand la page est prête
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeFromFirestore);
+} else {
+  initializeFromFirestore();
+}
+
 </script>
 <script>
 // Insère le header / footer / whatsapp avant le démarrage du routeur
 document.getElementById("header-mount").outerHTML = renderHeader();
 document.getElementById("footer-mount").outerHTML = renderFooter();
 document.getElementById("whatsapp-mount").outerHTML = renderWhatsAppButton();
+
+// ====== FONCTIONS FIRESTORE API ======
+
+async function loadProductsFromFirestore() {
+  try {
+    const response = await fetch('/api/products');
+    if (response.ok) {
+      products = await response.json();
+      renderProductsPage();
+    }
+  } catch (error) {
+    console.error('Erreur chargement produits:', error);
+  }
+}
+
+async function loadCarouselFromFirestore() {
+  try {
+    const response = await fetch('/api/carousel');
+    if (response.ok) {
+      const images = await response.json();
+      CAROUSEL = images;
+      renderCarousel();
+    }
+  } catch (error) {
+    console.error('Erreur chargement carousel:', error);
+  }
+}
+
+async function loadSiteSettingsFromFirestore() {
+  try {
+    const response = await fetch('/api/site-settings');
+    if (response.ok) {
+      const settings = await response.json();
+      SITE.name = settings.siteName || SITE.name;
+      SITE.tagline = settings.heroSubtitle || SITE.tagline;
+      SITE.whatsapp = settings.whatsappNumber || SITE.whatsapp;
+    }
+  } catch (error) {
+    console.error('Erreur chargement paramètres:', error);
+  }
+}
+
+async function loadOrdersFromFirestore() {
+  try {
+    const response = await fetch('/api/orders');
+    if (response.ok) {
+      ORDERS = await response.json();
+    }
+  } catch (error) {
+    console.error('Erreur chargement commandes:', error);
+  }
+}
+
+async function saveOrderToFirestore(orderData) {
+  try {
+    const response = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(orderData)
+    });
+    if (!response.ok) throw new Error('Erreur sauvegarde commande');
+    
+    // Recharger les commandes
+    await loadOrdersFromFirestore();
+    return true;
+  } catch (error) {
+    console.error('Erreur:', error);
+    return false;
+  }
+}
+
+async function updateOrderStatusInFirestore(orderId, newStatus) {
+  try {
+    // Trouver la commande
+    const order = ORDERS.find(o => o.id === orderId);
+    if (!order) return false;
+
+    const response = await fetch(`/api/orders?orderId=${orderId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({...order, status: newStatus})
+    });
+    
+    if (!response.ok) throw new Error('Erreur mise à jour');
+    
+    // Recharger les commandes
+    await loadOrdersFromFirestore();
+    return true;
+  } catch (error) {
+    console.error('Erreur:', error);
+    return false;
+  }
+}
+
+async function deleteProductFromFirestore(productId) {
+  try {
+    const response = await fetch(`/api/products?productId=${productId}`, {
+      method: 'DELETE'
+    });
+    if (!response.ok) throw new Error('Erreur suppression');
+    
+    // Recharger les produits
+    await loadProductsFromFirestore();
+    return true;
+  } catch (error) {
+    console.error('Erreur:', error);
+    return false;
+  }
+}
+
+// Charger les données au démarrage
+async function initializeFromFirestore() {
+  await loadProductsFromFirestore();
+  await loadCarouselFromFirestore();
+  await loadSiteSettingsFromFirestore();
+  await loadOrdersFromFirestore();
+}
+
+// Lancer l'initialisation quand la page est prête
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeFromFirestore);
+} else {
+  initializeFromFirestore();
+}
+
 </script>
 <script>
 /* ===========================================================
@@ -2529,7 +3279,7 @@ function renderAdminIngredientsList() {
     </div>`).join("");
 }
 
-function saveAdminProduct() {
+async function saveAdminProduct() {
   const id = document.getElementById("admin-prod-id").value;
   const name = document.getElementById("admin-prod-name").value.trim();
   const tagline = document.getElementById("admin-prod-tagline").value.trim();
@@ -2549,47 +3299,65 @@ function saveAdminProduct() {
     return;
   }
 
-  if (id) {
-    const idx = products.findIndex(p => p.id === id);
-    if (idx !== -1) {
-      products[idx] = {
-        ...products[idx], name, tagline, price, oldPrice, description,
-        usage, badge, benefits, minQty,
-        ingredients: ingredients.length > 0 ? ingredients : undefined,
-        image: adminImageBase64 || products[idx].image,
-        gallery: adminImageBase64 ? [adminImageBase64] : products[idx].gallery
-      };
+  const productData = {
+    name, tagline, price, oldPrice, description,
+    usage, badge, benefits, minQty,
+    ingredients: ingredients.length > 0 ? ingredients : undefined,
+    image: adminImageBase64 || IMG.product1,
+    gallery: adminImageBase64 ? [adminImageBase64] : [IMG.product1],
+    slug: name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
+    promo: false
+  };
+
+  try {
+    if (id) {
+      // PUT - Modifier
+      const response = await fetch(`/api/products?productId=${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productData)
+      });
+      if (!response.ok) throw new Error('Erreur sauvegarde');
+      toast("Produit modifié ✓", "success");
+    } else {
+      // POST - Créer
+      const response = await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productData)
+      });
+      if (!response.ok) throw new Error('Erreur création');
+      toast("Produit ajouté ✓", "success");
     }
-  } else {
-    const newId = String(Date.now());
-    const slug = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-    products.push({
-      id: newId, slug, name, tagline, price, oldPrice, description,
-      usage, badge, benefits, minQty,
-      ingredients: ingredients.length > 0 ? ingredients : undefined,
-      image, gallery: [image]
-    });
+
+    // Recharger les produits
+    await loadProductsFromFirestore();
+
+    // Reset
+    adminBenefits = [];
+    adminIngredients = [];
+    adminImageBase64 = "";
+
+    window.location.hash = "/admin/dashboard";
+    setTimeout(() => router(), 100);
+  } catch (error) {
+    console.error('Erreur:', error);
+    toast("Erreur lors de la sauvegarde", "error");
   }
-
-  // Reset
-  adminBenefits = [];
-  adminIngredients = [];
-  adminImageBase64 = "";
-
-  toast(id ? "Produit modifié ✓" : "Produit ajouté ✓", "success");
-  window.location.hash = "/admin/dashboard";
-  setTimeout(() => router(), 100);
 }
 
-function confirmDeleteProduct(id) {
+async function confirmDeleteProduct(id) {
   const p = getProduct_byId(id);
   if (!p) return;
   if (confirm("Supprimer le produit \"" + p.name + "\" ?")) {
-    const idx = products.findIndex(pr => pr.id === id);
-    if (idx !== -1) products.splice(idx, 1);
-    toast("Produit supprimé", "success");
-    window.location.hash = "/admin/dashboard";
-    setTimeout(() => router(), 100);
+    const success = await deleteProductFromFirestore(id);
+    if (success) {
+      toast("Produit supprimé", "success");
+      window.location.hash = "/admin/dashboard";
+      setTimeout(() => router(), 100);
+    } else {
+      toast("Erreur lors de la suppression", "error");
+    }
   }
 }
 
@@ -2643,6 +3411,131 @@ async function changeAdminPassword() {
   document.getElementById("admin-pwd-confirm").value = "";
 }
 
+
+
+// ====== FONCTIONS FIRESTORE API ======
+
+async function loadProductsFromFirestore() {
+  try {
+    const response = await fetch('/api/products');
+    if (response.ok) {
+      products = await response.json();
+      renderProductsPage();
+    }
+  } catch (error) {
+    console.error('Erreur chargement produits:', error);
+  }
+}
+
+async function loadCarouselFromFirestore() {
+  try {
+    const response = await fetch('/api/carousel');
+    if (response.ok) {
+      const images = await response.json();
+      CAROUSEL = images;
+      renderCarousel();
+    }
+  } catch (error) {
+    console.error('Erreur chargement carousel:', error);
+  }
+}
+
+async function loadSiteSettingsFromFirestore() {
+  try {
+    const response = await fetch('/api/site-settings');
+    if (response.ok) {
+      const settings = await response.json();
+      SITE.name = settings.siteName || SITE.name;
+      SITE.tagline = settings.heroSubtitle || SITE.tagline;
+      SITE.whatsapp = settings.whatsappNumber || SITE.whatsapp;
+    }
+  } catch (error) {
+    console.error('Erreur chargement paramètres:', error);
+  }
+}
+
+async function loadOrdersFromFirestore() {
+  try {
+    const response = await fetch('/api/orders');
+    if (response.ok) {
+      ORDERS = await response.json();
+    }
+  } catch (error) {
+    console.error('Erreur chargement commandes:', error);
+  }
+}
+
+async function saveOrderToFirestore(orderData) {
+  try {
+    const response = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(orderData)
+    });
+    if (!response.ok) throw new Error('Erreur sauvegarde commande');
+    
+    // Recharger les commandes
+    await loadOrdersFromFirestore();
+    return true;
+  } catch (error) {
+    console.error('Erreur:', error);
+    return false;
+  }
+}
+
+async function updateOrderStatusInFirestore(orderId, newStatus) {
+  try {
+    // Trouver la commande
+    const order = ORDERS.find(o => o.id === orderId);
+    if (!order) return false;
+
+    const response = await fetch(`/api/orders?orderId=${orderId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({...order, status: newStatus})
+    });
+    
+    if (!response.ok) throw new Error('Erreur mise à jour');
+    
+    // Recharger les commandes
+    await loadOrdersFromFirestore();
+    return true;
+  } catch (error) {
+    console.error('Erreur:', error);
+    return false;
+  }
+}
+
+async function deleteProductFromFirestore(productId) {
+  try {
+    const response = await fetch(`/api/products?productId=${productId}`, {
+      method: 'DELETE'
+    });
+    if (!response.ok) throw new Error('Erreur suppression');
+    
+    // Recharger les produits
+    await loadProductsFromFirestore();
+    return true;
+  } catch (error) {
+    console.error('Erreur:', error);
+    return false;
+  }
+}
+
+// Charger les données au démarrage
+async function initializeFromFirestore() {
+  await loadProductsFromFirestore();
+  await loadCarouselFromFirestore();
+  await loadSiteSettingsFromFirestore();
+  await loadOrdersFromFirestore();
+}
+
+// Lancer l'initialisation quand la page est prête
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeFromFirestore);
+} else {
+  initializeFromFirestore();
+}
 
 </script>
 <!-- ===========================================================
